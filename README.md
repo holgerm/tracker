@@ -11,3 +11,9 @@ This app should serve three purposes for me:
 3. an app that helps me earn my living.
 
 I develop this app completely as open software, although I hope, that I will offer it for purchase someday, if it is good enough.
+
+# Usage
+
+## Version 0.1
+
+For the first version Tracker app simply offers to add tasks, and activate / deactivate them. Each task can represent a project. When you work on a project, activate the according task by touch. When you finish working touch it again to deactivate it. You can activate multiple tasks at the same time. Each task shows how much time you spent on it so far.
