@@ -27,4 +27,3 @@ The first version of the Tracker app simply offers to add tasks, and activate / 
 3. Task needs timer that accumulates time while active
 6. Remove existing tasks.
 4. Persistence for all task states.
-5. Nicer UI for tasks.
