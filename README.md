@@ -16,7 +16,7 @@ I develop this app completely as open software, although I hope, that I will off
 
 ## Usage
 
-### Version 0.1
+### Version 0.1 (ongoing)
 
 The first version of the Tracker app simply offers to add tasks, and activate / deactivate them. Each task can represent a project. When you work on a project, activate the according task by touch. When you finish working touch it again to deactivate it. You can activate multiple tasks at the same time. Each task shows how much time you spent on it so far.
 
