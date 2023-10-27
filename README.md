@@ -25,5 +25,5 @@ The first version of the Tracker app simply offers to add tasks, and activate / 
 1. ~~Task must be clickable~~
 2. ~~Task model needs active/passive state~~
 3. ~~Task needs timer that accumulates time while active~~
-4. Persistence for all task states.
+4. ~~Persistence for all task states.~~
 6. Remove existing tasks.
