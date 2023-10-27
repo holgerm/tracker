@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'src/tracker.dart';
 
-void main() {
+late SharedPreferences preferences;
+
+void main() async {
+  preferences = await SharedPreferences.getInstance();
   runApp(ChangeNotifierProvider(
       create: (context) => TasksModel(), child: const MyApp()));
 }

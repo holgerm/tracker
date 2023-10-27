@@ -54,6 +54,7 @@ class _TasksGridState extends State<TasksGrid> {
       Provider.of<TasksModel>(context, listen: false).addTask(controller.text);
       Navigator.of(context).pop();
       controller.text = "";
+      enableSubmit = false;
     }
 
     void press() {
