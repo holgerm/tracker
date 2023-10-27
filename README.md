@@ -26,4 +26,5 @@ The first version of the Tracker app simply offers to add tasks, and activate / 
 2. ~~Task model needs active/passive state~~
 3. ~~Task needs timer that accumulates time while active~~
 4. ~~Persistence for all task states.~~
-6. Remove existing tasks.
+6. ~~Remove existing tasks.~~
+7. Provide as internal App for either iOS or Android or both

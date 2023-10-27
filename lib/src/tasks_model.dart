@@ -2,14 +2,16 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tracker/main.dart';
 
 class TasksModel extends ChangeNotifier {
   static const String prefKeyTaskNames = "tasknames";
 
+  static TasksModel? instance;
+
   TasksModel() {
     init();
+    TasksModel.instance = this;
   }
 
   Future<void> init() async {
@@ -53,6 +55,12 @@ class TasksModel extends ChangeNotifier {
   addTask(String name) {
     if (name.isEmpty) name = "Unnamed Task";
     tasks.add(TaskModel(name));
+    storeTasks();
+    notifyListeners();
+  }
+
+  void deleteTask(TaskModel model) {
+    tasks.remove(model);
     storeTasks();
     notifyListeners();
   }
@@ -124,7 +132,7 @@ class TaskModel extends ChangeNotifier {
 }
 
 class Task extends StatelessWidget {
-  const Task({super.key, required this.tm});
+  Task({super.key, required this.tm});
 
   final TaskModel tm;
 
@@ -134,19 +142,23 @@ class Task extends StatelessWidget {
       value: tm,
       child: Consumer<TaskModel>(
         builder: (BuildContext context, model, Widget? child) {
-          return Material(
-            color: model.active ? Colors.green : Colors.white,
-            child: InkWell(
-              onTap: () {
-                model.toggleActive();
-              },
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(model.name),
-                    Text(model.getTimeText()),
-                  ],
+          return GestureDetector(
+            onLongPress: () => _showCustomMenu(context, model),
+            onTapDown: _storePosition,
+            child: Material(
+              color: model.active ? Colors.green : Colors.white,
+              child: InkWell(
+                onTap: () {
+                  model.toggleActive();
+                },
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(model.name),
+                      Text(model.getTimeText()),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -154,5 +166,42 @@ class Task extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Offset? _tapPosition;
+
+  void _storePosition(TapDownDetails details) {
+    _tapPosition = details.globalPosition;
+  }
+
+  void _showCustomMenu(BuildContext context, TaskModel model) {
+    RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    showMenu(
+            context: context,
+            items: const <PopupMenuEntry<String>>[
+              PopupMenuItem(
+                value: 'delete',
+                child: ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text('Delete'),
+                ),
+              ),
+            ],
+            position: RelativeRect.fromRect(
+                _tapPosition! &
+                    const Size(20, 40), // smaller rect, the touch area
+                Offset.zero & overlay.size // Bigger rect, the entire screen
+                ))
+        .then((value) {
+      switch (value) {
+        case 'delete':
+          log("Deleted: ${model.name}"); //TODO delete it instead
+          TasksModel.instance?.deleteTask(model);
+          break;
+        default:
+          return;
+      }
+    });
   }
 }
