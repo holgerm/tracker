@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tracker/main.dart';
@@ -15,14 +14,23 @@ class TasksModel extends ChangeNotifier {
   }
 
   Future<void> init() async {
-    // TODO: show some spinner while we load the prefs to avoid a short view on a blank page at start
     List<String> taskNames =
         preferences.getStringList(prefKeyTaskNames) ?? <String>[];
     for (final taskName in taskNames) {
       var tm = TaskModel(taskName);
-      tm.elapsedSeconds = preferences.getInt("task_${taskName}_secs") ?? 0;
-      tm.elapsedMinutes = preferences.getInt("task_${taskName}_mins") ?? 0;
-      tm.elapsedHours = preferences.getInt("task_${taskName}_hours") ?? 0;
+      int? startTimeMS = preferences.getInt("task_${taskName}_startTime");
+      if (startTimeMS != null) {
+        tm.startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMS);
+        tm._setActive();
+      } else {
+        tm.startTime = null;
+      }
+      int? durationSec = preferences.getInt("task_${taskName}_duration");
+      if (durationSec != null) {
+        tm.duration = Duration(seconds: durationSec);
+      } else {
+        tm.duration = const Duration();
+      }
       tasks.add(tm);
     }
     notifyListeners();
@@ -40,12 +48,14 @@ class TasksModel extends ChangeNotifier {
     List<String> taskNames = <String>[];
     for (var element in tasks) {
       taskNames.add(element.name);
+      if (element.startTime != null) {
+        await preferences.setInt("task_${element.name}_startTime",
+            element.startTime!.millisecondsSinceEpoch);
+      } else {
+        await preferences.remove("task_${element.name}_startTime");
+      }
       await preferences.setInt(
-          "task_${element.name}_secs", element.elapsedSeconds);
-      await preferences.setInt(
-          "task_${element.name}_mins", element.elapsedMinutes);
-      await preferences.setInt(
-          "task_${element.name}_hours", element.elapsedHours);
+          "task_${element.name}_duration", element.duration.inSeconds);
     }
     await preferences.setStringList(prefKeyTaskNames, taskNames);
   }
@@ -61,6 +71,8 @@ class TasksModel extends ChangeNotifier {
 
   void deleteTask(TaskModel model) {
     tasks.remove(model);
+    preferences.remove("task_${model.name}_startTime");
+    preferences.remove("task_${model.name}_duration");
     storeTasks();
     notifyListeners();
   }
@@ -77,69 +89,87 @@ class TaskModel extends ChangeNotifier {
 
   String name = "unnamed";
 
+  /// Start time of current activity. Null if not active.
+  DateTime? startTime;
+  void _setStartTime(DateTime? newValue) {
+    startTime = newValue;
+    if (startTime != null) {
+      preferences.setInt(
+          "task_${name}_startTime", startTime!.millisecondsSinceEpoch);
+    } else {
+      preferences.remove("task_${name}_startTime");
+    }
+  }
+
+  /// Accumulated duration of finished active times.
+  Duration duration = const Duration();
+  void _setDuration(Duration newValue) {
+    duration = newValue;
+    preferences.setInt("task_${name}_duration", duration.inSeconds);
+  }
+
   bool active = false;
-  int elapsedSeconds = 0;
-  int elapsedMinutes = 0;
-  int elapsedHours = 0;
   Timer? timer;
 
   toggleActive() {
     if (active) {
       active = false;
       timer?.cancel();
+      _setDuration(duration + DateTime.now().difference(startTime!));
+      _setStartTime(null);
+      preferences.remove("task_${name}_startTime");
     } else {
-      active = true;
-      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        _increaseTime();
-      });
+      _setStartTime(DateTime.now());
+      _setActive();
     }
 
     notifyListeners();
+  }
+
+  void _setActive() {
+    active = true;
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _increaseTime();
+    });
   }
 
   _increaseTime() {
-    _increaseElapsedSeconds();
+    // _increaseElapsedSeconds();
     notifyListeners();
   }
 
-  void _increaseElapsedSeconds() {
-    if (elapsedSeconds < 59) {
-      elapsedSeconds++;
-    } else {
-      elapsedSeconds = 0;
-      _increaseElapsedMinutes();
-    }
+  String getTimeString() {
+    Duration currentDuration = startTime != null
+        ? duration + DateTime.now().difference(startTime!)
+        : duration;
+    final int hours = currentDuration.inHours;
+    final int minutes = currentDuration.inMinutes.remainder(60);
+    final int seconds = currentDuration.inSeconds.remainder(60);
+    return "${hours}h:${minutes}m:${seconds}s";
   }
 
-  void _increaseElapsedMinutes() {
-    if (elapsedMinutes < 59) {
-      elapsedMinutes++;
-      preferences.setInt("task_${name}_mins", elapsedMinutes);
-    } else {
-      elapsedMinutes = 0;
-      elapsedHours++;
-      preferences.setInt("task_${name}_hours", elapsedHours);
-    }
-  }
-
-  String getTimeText() {
-    if (elapsedHours > 0) {
-      return "${elapsedHours}h:${elapsedMinutes}m:${elapsedSeconds}s";
-    }
-    if (elapsedMinutes > 0) return "${elapsedMinutes}m:${elapsedSeconds}s";
-    return "${elapsedSeconds}s";
+  void reset() {
+    if (active) toggleActive();
+    _setDuration(const Duration());
+    _setStartTime(null);
+    notifyListeners();
   }
 }
 
-class Task extends StatelessWidget {
-  Task({super.key, required this.tm});
+class Task extends StatefulWidget {
+  const Task({super.key, required this.tm});
 
   final TaskModel tm;
 
   @override
+  State<Task> createState() => _TaskState();
+}
+
+class _TaskState extends State<Task> {
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
-      value: tm,
+      value: widget.tm,
       child: Consumer<TaskModel>(
         builder: (BuildContext context, model, Widget? child) {
           return GestureDetector(
@@ -156,7 +186,7 @@ class Task extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(model.name),
-                      Text(model.getTimeText()),
+                      Text(model.getTimeString()),
                     ],
                   ),
                 ),
@@ -184,7 +214,14 @@ class Task extends StatelessWidget {
                 value: 'delete',
                 child: ListTile(
                   leading: Icon(Icons.delete),
-                  title: Text('Delete'),
+                  // title: Text('Delete'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'reset',
+                child: ListTile(
+                  leading: Icon(Icons.replay),
+                  //title: Text('Reset'),
                 ),
               ),
             ],
@@ -196,8 +233,10 @@ class Task extends StatelessWidget {
         .then((value) {
       switch (value) {
         case 'delete':
-          log("Deleted: ${model.name}"); //TODO delete it instead
           TasksModel.instance?.deleteTask(model);
+          break;
+        case 'reset':
+          model.reset();
           break;
         default:
           return;

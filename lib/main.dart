@@ -6,6 +6,7 @@ import 'src/tracker.dart';
 late SharedPreferences preferences;
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   preferences = await SharedPreferences.getInstance();
   runApp(ChangeNotifierProvider(
       create: (context) => TasksModel(), child: const MyApp()));
