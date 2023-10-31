@@ -16,7 +16,15 @@ I develop this app completely as open software, although I hope, that I will off
 
 ## Usage
 
-### Version 0.1 (ongoing)
+### Version 0.2 (ongoing)
+
+This version will be published as open beta. Hence we need some upgrades:
+
+1. Edit function (adds to long click menu) that allows to change the name.
+2. Nicer UI - Concept needed.
+3. A Widget showing the current task(s). Here is a concept needed, too.
+
+### Version 0.1
 
 The first version of the Tracker app simply offers to add tasks, and activate / deactivate them. Each task can represent a project. When you work on a project, activate the according task by touch. When you finish working touch it again to deactivate it. You can activate multiple tasks at the same time. Each task shows how much time you spent on it so far.
 
