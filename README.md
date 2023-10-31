@@ -14,7 +14,7 @@ This app should serve three purposes for me:
 
 I develop this app completely as open software, although I hope, that I will offer it for purchase someday, if it is good enough.
 
-## Usage
+## Versions
 
 ### Version 0.2 (ongoing)
 
