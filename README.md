@@ -16,22 +16,17 @@ I develop this app completely as open software, although I hope, that I will off
 
 ## Versions
 
-### Version 0.3 (not yet)
+### Version 0.2 (ongoing)
 
 This version aims at a really useful app, although not nice to look at and still not with good usability.
 
 1. Let current tasks become projects (basically renaming)
-2. Allow to define (new) tasks within each project.
-3. Allow to priorize tasks within each project.
-4. Tomatoes on a project will run on the most priorized task of that project.
-5. Save and show work times on the level of tasks and projects.
-
-### Version 0.2 (ongoing)
-
-This version will enhance usefullness of the app:
-
+1. Allow to define (new) tasks within each project.
+1. Allow to priorize tasks within each project.
+1. Start a Tomato function within the long click menu of each task.
+1. Tomatoes on a project will run on the most priorized task of that project.
+1. Save and show work times on the level of tasks and projects.
 1. Edit function (adds to long click menu) that allows to change the name.
-2. Start a Tomato function within the long click menu of each task.
 
 ### Version 0.1
 
