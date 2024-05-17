@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tracker/main.dart';
+
+import 'tracker.dart';
 
 class TasksModel extends ChangeNotifier {
   static const String prefKeyTaskNames = "tasknames";
@@ -20,8 +21,8 @@ class TasksModel extends ChangeNotifier {
       var tm = TaskModel(taskName);
       int? startTimeMS = preferences.getInt("task_${taskName}_startTime");
       if (startTimeMS != null) {
-        tm.startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMS);
-        tm._setActive();
+        // tm.startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMS);
+        tm._activate(DateTime.fromMillisecondsSinceEpoch(startTimeMS));
       } else {
         tm.startTime = null;
       }
@@ -112,30 +113,40 @@ class TaskModel extends ChangeNotifier {
   Timer? timer;
 
   toggleActive() {
-    if (active) {
-      active = false;
-      timer?.cancel();
-      _setDuration(duration + DateTime.now().difference(startTime!));
-      _setStartTime(null);
-      preferences.remove("task_${name}_startTime");
+    if (Settings.instance.totalTrackMode) {
+      print("Deactivating all tasks");
+      for (var task in TasksModel.tasks) {
+        if (task.active) {
+          print("Deactivating ${task.name}");
+          task._deactivate();
+        }
+      }
+      _activate(DateTime.now());
     } else {
-      _setStartTime(DateTime.now());
-      _setActive();
+      if (active) {
+        _deactivate();
+      } else {
+        _activate(DateTime.now());
+      }
     }
-
     notifyListeners();
   }
 
-  void _setActive() {
+  void _deactivate() {
+    active = false;
+    timer?.cancel();
+    _setDuration(duration + DateTime.now().difference(startTime!));
+    _setStartTime(null);
+    preferences.remove("task_${name}_startTime");
+    notifyListeners();
+  }
+
+  void _activate(DateTime time) {
+    _setStartTime(time);
     active = true;
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _increaseTime();
+      notifyListeners();
     });
-  }
-
-  _increaseTime() {
-    // _increaseElapsedSeconds();
-    notifyListeners();
   }
 
   String getTimeString() {

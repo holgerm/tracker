@@ -8,6 +8,7 @@ late SharedPreferences preferences;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   preferences = await SharedPreferences.getInstance();
+  await Settings.instance.loadSettings();
   runApp(ChangeNotifierProvider(
       create: (context) => TasksModel(), child: const MyApp()));
 }
@@ -19,14 +20,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Tracker',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
       home: const TasksGrid(),
       routes: {
-        '/settings': (context) => SettingsPage(),
+        '/settings': (context) => const SettingsPage(),
         // Add more routes here
       },
     );

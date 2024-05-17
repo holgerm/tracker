@@ -39,12 +39,33 @@ class _TasksGridState extends State<TasksGrid> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          openNewTaskDialog(context);
-        },
-        tooltip: 'Add Task',
-        child: const Icon(Icons.add),
+      floatingActionButton: Stack(
+        children: <Widget>[
+          Positioned(
+            right: 12.0,
+            bottom: 25.0,
+            child: FloatingActionButton(
+              heroTag: "add",
+              onPressed: () {
+                openNewTaskDialog(context);
+              },
+              tooltip: 'Add Task',
+              child: const Icon(Icons.add),
+            ),
+          ),
+          Positioned(
+            left: 38.0,
+            bottom: 25.0,
+            child: FloatingActionButton(
+              heroTag: "settings",
+              onPressed: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+              tooltip: 'Settings',
+              child: const Icon(Icons.settings),
+            ),
+          ),
+        ],
       ),
     );
   }
