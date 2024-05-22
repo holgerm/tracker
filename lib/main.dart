@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'src/tracker.dart';
@@ -8,7 +9,17 @@ late SharedPreferences preferences;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   preferences = await SharedPreferences.getInstance();
-  await Settings.instance.loadSettings();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Register the adapters
+  Hive.registerAdapter(SettingsAdapter());
+
+  if (!Hive.isBoxOpen('settings')) {
+    await Hive.openBox('settings');
+  }
+
   runApp(ChangeNotifierProvider(
       create: (context) => TasksModel(), child: const MyApp()));
 }

@@ -1,26 +1,26 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info/package_info.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:tracker/src/hive_ids.dart';
 
-class Settings {
-  Settings._privateConstructor();
+part 'settings.g.dart'; // This is the part directive
 
-  static final Settings instance = Settings._privateConstructor();
+@HiveType(typeId: HiveTypeId.settings)
+class Settings extends HiveObject {
+  @HiveField(0)
+  bool _totalTrackMode;
 
-  bool _totalTrackMode = false;
+  Settings() : _totalTrackMode = false;
 
   bool get totalTrackMode => _totalTrackMode;
 
   set totalTrackMode(bool value) {
     _totalTrackMode = value;
-    _saveTrackMode(value);
+    Hive.box('settings').put('totalTrackMode', value);
   }
 
-  Future<void> _saveTrackMode(bool value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('trackMode', value);
-  }
-
-  Future<void> loadSettings() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _totalTrackMode = prefs.getBool('trackMode') ?? false;
+  static Future<String> getAppVersion() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    return packageInfo.version;
   }
 }

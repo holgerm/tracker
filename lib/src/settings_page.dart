@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:tracker/src/tracker.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -18,7 +19,8 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    _trackMode = Settings.instance.totalTrackMode;
+    _trackMode = Hive.box<dynamic>('settings')
+        .get('totalTrackMode', defaultValue: false);
     setState(() {});
   }
 
@@ -32,13 +34,34 @@ class _SettingsPageState extends State<SettingsPage> {
         children: ListTile.divideTiles(
           context: context,
           tiles: [
+            FutureBuilder<String>(
+              future: Settings.getAppVersion(),
+              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const ListTile(
+                    title: Text('Loading version number...'),
+                  );
+                } else {
+                  if (snapshot.hasError) {
+                    return ListTile(
+                      title: Text('Error: ${snapshot.error}'),
+                    );
+                  } else {
+                    return ListTile(
+                      title: Text(
+                          'App Version: ${snapshot.data}'), // Version number
+                    );
+                  }
+                }
+              },
+            ),
             SwitchListTile(
               title: const Text('Total Tracking Mode'),
               value: _trackMode,
               onChanged: (bool value) {
                 setState(() {
                   _trackMode = value;
-                  Settings.instance.totalTrackMode = value;
+                  Hive.box('settings').put('totalTrackMode', value);
                 });
               },
             ),

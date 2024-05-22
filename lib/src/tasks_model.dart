@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'tracker.dart';
@@ -113,11 +114,10 @@ class TaskModel extends ChangeNotifier {
   Timer? timer;
 
   toggleActive() {
-    if (Settings.instance.totalTrackMode) {
-      print("Deactivating all tasks");
+    if (Hive.box<dynamic>('settings')
+        .get('totalTrackMode', defaultValue: false)) {
       for (var task in TasksModel.tasks) {
         if (task.active) {
-          print("Deactivating ${task.name}");
           task._deactivate();
         }
       }
