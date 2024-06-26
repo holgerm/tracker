@@ -14,14 +14,14 @@ void main() async {
   await Hive.initFlutter();
 
   // Register the adapters
-  Hive.registerAdapter(SettingsAdapter());
+  // Hive.registerAdapter(SettingsAdapter());
 
-  if (!Hive.isBoxOpen('settings')) {
-    await Hive.openBox('settings');
+  if (!Hive.isBoxOpen('tracker')) {
+    await Hive.openBox('tracker');
   }
 
   runApp(ChangeNotifierProvider(
-      create: (context) => TasksModel(), child: const MyApp()));
+      create: (context) => TasksManager(), child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {

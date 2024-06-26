@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tracker/src/tasks_model.dart';
+import 'package:tracker/src/tasks_manager.dart';
 import 'package:provider/provider.dart';
 
 class TasksGrid extends StatefulWidget {
@@ -31,7 +31,7 @@ class _TasksGridState extends State<TasksGrid> {
       appBar: AppBar(
         title: const Text("Track Your Tasks"),
       ),
-      body: Consumer<TasksModel>(
+      body: Consumer<TasksManager>(
         builder: (BuildContext context, model, Widget? child) {
           return GridView.count(
             crossAxisCount: 2,
@@ -72,7 +72,8 @@ class _TasksGridState extends State<TasksGrid> {
 
   openNewTaskDialog(BuildContext context) {
     void submit() {
-      Provider.of<TasksModel>(context, listen: false).addTask(controller.text);
+      Provider.of<TasksManager>(context, listen: false)
+          .addTask(controller.text);
       Navigator.of(context).pop();
       controller.text = "";
       enableSubmit = false;

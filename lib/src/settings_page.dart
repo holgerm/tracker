@@ -19,8 +19,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _loadSettings() async {
-    _trackMode = Hive.box<dynamic>('settings')
-        .get('totalTrackMode', defaultValue: false);
+    _trackMode = Hive.box('tracker').get('totalTrackMode', defaultValue: false);
     setState(() {});
   }
 
@@ -61,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
               onChanged: (bool value) {
                 setState(() {
                   _trackMode = value;
-                  Hive.box('settings').put('totalTrackMode', value);
+                  Hive.box('tracker').put('totalTrackMode', value);
                 });
               },
             ),

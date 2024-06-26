@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
+import 'package:tracker/src/task_widget.dart';
 
 import 'tracker.dart';
 
-class TasksModel extends ChangeNotifier {
+class TasksManager extends ChangeNotifier {
   static const String prefKeyTaskNames = "tasknames";
 
-  static TasksModel? instance;
+  static TasksManager? instance;
 
-  TasksModel() {
+  TasksManager() {
     init();
-    TasksModel.instance = this;
+    TasksManager.instance = this;
   }
 
   Future<void> init() async {
@@ -79,9 +79,9 @@ class TasksModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Task> widgets() {
-    return List<Task>.generate(
-        tasks.length, (index) => Task(tm: tasks.elementAt(index)),
+  List<TaskWidget> widgets() {
+    return List<TaskWidget>.generate(
+        tasks.length, (index) => TaskWidget(tm: tasks.elementAt(index)),
         growable: true);
   }
 }
@@ -114,9 +114,8 @@ class TaskModel extends ChangeNotifier {
   Timer? timer;
 
   toggleActive() {
-    if (Hive.box<dynamic>('settings')
-        .get('totalTrackMode', defaultValue: false)) {
-      for (var task in TasksModel.tasks) {
+    if (Hive.box('tracker').get('totalTrackMode', defaultValue: false)) {
+      for (var task in TasksManager.tasks) {
         if (task.active) {
           task._deactivate();
         }
@@ -135,7 +134,10 @@ class TaskModel extends ChangeNotifier {
   void _deactivate() {
     active = false;
     timer?.cancel();
-    _setDuration(duration + DateTime.now().difference(startTime!));
+    _setDuration(duration +
+        (startTime != null
+            ? DateTime.now().difference(startTime!)
+            : Duration.zero));
     _setStartTime(null);
     preferences.remove("task_${name}_startTime");
     notifyListeners();
@@ -160,98 +162,9 @@ class TaskModel extends ChangeNotifier {
   }
 
   void reset() {
-    if (active) toggleActive();
     _setDuration(const Duration());
     _setStartTime(null);
+    if (active) toggleActive();
     notifyListeners();
-  }
-}
-
-class Task extends StatefulWidget {
-  const Task({super.key, required this.tm});
-
-  final TaskModel tm;
-
-  @override
-  State<Task> createState() => _TaskState();
-}
-
-class _TaskState extends State<Task> {
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: widget.tm,
-      child: Consumer<TaskModel>(
-        builder: (BuildContext context, model, Widget? child) {
-          return GestureDetector(
-            onLongPress: () => _showCustomMenu(context, model),
-            onTapDown: _storePosition,
-            child: Material(
-              color: model.active ? Colors.green : Colors.white,
-              child: InkWell(
-                onTap: () {
-                  model.toggleActive();
-                },
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(model.name),
-                      Text(model.getTimeString()),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Offset? _tapPosition;
-
-  void _storePosition(TapDownDetails details) {
-    _tapPosition = details.globalPosition;
-  }
-
-  void _showCustomMenu(BuildContext context, TaskModel model) {
-    RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-    showMenu(
-            context: context,
-            items: const <PopupMenuEntry<String>>[
-              PopupMenuItem(
-                value: 'delete',
-                child: ListTile(
-                  leading: Icon(Icons.delete),
-                  // title: Text('Delete'),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'reset',
-                child: ListTile(
-                  leading: Icon(Icons.replay),
-                  //title: Text('Reset'),
-                ),
-              ),
-            ],
-            position: RelativeRect.fromRect(
-                _tapPosition! &
-                    const Size(20, 40), // smaller rect, the touch area
-                Offset.zero & overlay.size // Bigger rect, the entire screen
-                ))
-        .then((value) {
-      switch (value) {
-        case 'delete':
-          TasksModel.instance?.deleteTask(model);
-          break;
-        case 'reset':
-          model.reset();
-          break;
-        default:
-          return;
-      }
-    });
   }
 }
